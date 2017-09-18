@@ -1,0 +1,24 @@
+
+{
+  "name": "react-native-camera2-android",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Camera2.js",
+  "rnpm": {
+    "android": {
+      "packageInstance": "new Camera2Package()"
+    }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react-native"
+  ],
+  "author": "",
+  "license": "",
+  "peerDependencies": {
+    "react-native": "^0.41.2",
+    "react-native-windows": "0.41.0-rc.1"
+  }
+}
