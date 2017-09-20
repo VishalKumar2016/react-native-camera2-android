@@ -99,6 +99,8 @@ public class Camera2RecorderView extends PermissionViewBase {
 
         @Override
         public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+            closeCamera();
+            stopBackgroundThread();
             return true;
         }
 
@@ -588,7 +590,7 @@ public class Camera2RecorderView extends PermissionViewBase {
             mMediaRecorder.reset();
             onRecordingStopped(mNextVideoAbsolutePath);
             mNextVideoAbsolutePath = null;
-            goBack();
+            // goBack();
             startPreview();
         }
     }
@@ -758,7 +760,7 @@ public class Camera2RecorderView extends PermissionViewBase {
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
                     onCaptureFinished(file.getAbsolutePath());
-                    goBack();
+                    // goBack();
                     startPreview();
                 }
             };
