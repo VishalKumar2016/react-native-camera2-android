@@ -717,7 +717,7 @@ public class Camera2RecorderView extends PermissionViewBase {
             captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
             // Orientation
             int rotation = reactApplicationContext.getCurrentActivity().getWindowManager().getDefaultDisplay().getRotation();
-            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, DEFAULT_ORIENTATIONS.get(rotation));
+            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, (mFacing == CameraCharacteristics.LENS_FACING_BACK) ? DEFAULT_ORIENTATIONS.get(rotation) : INVERSE_ORIENTATIONS.get(rotation));
             String fileName = String.format("IMG_%s.jpg", new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()));
             final File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) +"/" +fileName);
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
