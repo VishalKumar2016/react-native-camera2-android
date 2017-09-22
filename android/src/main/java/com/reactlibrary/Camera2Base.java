@@ -29,6 +29,7 @@ abstract class Camera2Base extends AutoFitTextureView {
     abstract void stop();
     abstract void onResume();
     abstract void onPause();
+    abstract void setCameraState(boolean isVideo);
     abstract void switchTorch(boolean isFlash);
 
     abstract void setType(String type);
@@ -73,15 +74,15 @@ abstract class Camera2Base extends AutoFitTextureView {
     }
 
     public void onCaptureFinished(String path) {
-            WritableMap event = Arguments.createMap();
-            event.putString("file", path);
-            event.putString("file_type", "image");
-            ReactContext reactContext = (ReactContext) getContext();
-            reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
-                    getId(),
-                    "imageCaptureFinish",
-                    event
-            );
+        WritableMap event = Arguments.createMap();
+        event.putString("file", path);
+        event.putString("file_type", "image");
+        ReactContext reactContext = (ReactContext) getContext();
+        reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
+                getId(),
+                "imageCaptureFinish",
+                event
+        );
     }
     public void onCameraAccessException() {
         WritableMap event = Arguments.createMap();

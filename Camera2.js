@@ -64,6 +64,7 @@ Camera2.propTypes = {
   type: PropTypes.oneOf(['front', 'back']),
   flash: PropTypes.oneOf(['on', 'off','auto']),
   torch: PropTypes.oneOf(['torch_on', 'torch_off']),
+  isVideo: PropTypes.oneOf(['yes', 'no']),
   videoEncodingBitrate: PropTypes.number,
   videoEncodingFrameRate: PropTypes.number
 };

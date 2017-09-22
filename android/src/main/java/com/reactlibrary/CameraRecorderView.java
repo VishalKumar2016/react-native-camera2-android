@@ -44,6 +44,11 @@ public class CameraRecorderView extends Camera2Base implements TextureView.Surfa
     }
 
     @Override
+    void setCameraState(boolean isVideo) {
+
+    }
+
+    @Override
     void switchTorch(boolean isFlash) {
 
     }

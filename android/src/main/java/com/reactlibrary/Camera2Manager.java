@@ -52,6 +52,11 @@ public class Camera2Manager extends SimpleViewManager<Camera2Base> implements Li
         view.setFlashStatus(flashStatus);
     }
 
+    @ReactProp(name = "isVideo")
+    public void setCameraState(Camera2Base view, @Nullable String isVideo) {
+        view.setCameraState(isVideo.equals("yes"));
+    }
+
     @ReactProp(name = "torch")
     public void switchTorch(Camera2Base view, @Nullable String torchStatus) {
         view.setTorchStatus(torchStatus);
