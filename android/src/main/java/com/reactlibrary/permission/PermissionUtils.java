@@ -15,7 +15,7 @@ import com.reactlibrary.PermissionViewBase;
 public class PermissionUtils
 {
     public static @Nullable
-    // AlertDialog explainingDialog(@NonNull final Camera2RecorderView module,
+        // AlertDialog explainingDialog(@NonNull final Camera2RecorderView module,
     AlertDialog explainingDialog(@NonNull final PermissionViewBase module,
                                  @NonNull final OnExplainingPermissionCallback callback)
     {
@@ -25,7 +25,7 @@ public class PermissionUtils
         }
 
         final String title = "Permission denied";
-        final String text = "To be able to take pictures or video with your camera.";
+        final String text = "Grant Permission to be able to take pictures or video with your camera.";
         final String btnReTryTitle = "Re-try";
         final String btnOkTitle = "I am sure";
 

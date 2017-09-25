@@ -98,7 +98,8 @@ public class Camera2Manager extends SimpleViewManager<Camera2Base> implements Li
                 "imageCaptureFinish", MapBuilder.of("registrationName", "onImageCaptureFinish"),
                 "recordingFinish", MapBuilder.of("registrationName", "onRecordingFinished"),
                 "cameraAccessException", MapBuilder.of("registrationName", "onCameraAccessException"),
-                "cameraFailed", MapBuilder.of("registrationName", "cameraFailed")
+                "cameraFailed", MapBuilder.of("registrationName", "onCameraFailed"),
+                "permissionDenied", MapBuilder.of("registrationName", "onPermissionDenied")
         );
     }
 

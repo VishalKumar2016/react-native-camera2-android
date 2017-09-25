@@ -54,7 +54,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+@TargetApi(Build.VERSION_CODES.M)
 public class Camera2RecorderView extends PermissionViewBase {
     /**
      * Conversion from screen rotation to JPEG orientation.
@@ -143,8 +143,14 @@ public class Camera2RecorderView extends PermissionViewBase {
             mSurfaceTextureIsAvailable = true;
             tempWidth = width;
             tempHeight = height;
-            if (permissionsCheck(REQUEST_PERMISSIONS_OPEN2)) {
-                openCamera(width, height);
+            if (isPermissionGranted(getActivity())) {
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        openCamera(tempWidth, tempHeight);
+                    }
+                }, 500);
             }
         }
 
@@ -163,7 +169,6 @@ public class Camera2RecorderView extends PermissionViewBase {
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture texture) {
         }
-
     };
 
     /**
@@ -386,7 +391,7 @@ public class Camera2RecorderView extends PermissionViewBase {
             if (isPermissionGranted(getActivity())) {
                 openCamera(getWidth(), getHeight());
             } else {
-                showMessage();
+                onPermissionDenied();
             }
         }
     }
@@ -578,7 +583,8 @@ public class Camera2RecorderView extends PermissionViewBase {
     };
 
     public Camera2RecorderView(Context context, ReactApplicationContext reactApplicationContext) {
-        super(context, reactApplicationContext); if(permissionsCheck(REQUEST_PERMISSIONS_SET_SURFACE)){
+        super(context, reactApplicationContext);
+        if(permissionsCheck(REQUEST_PERMISSIONS_SET_SURFACE)){
             setSurfaceTextureListener(mSurfaceTextureListener);
         }
     }
@@ -657,7 +663,7 @@ public class Camera2RecorderView extends PermissionViewBase {
             if (isPermissionGranted(getActivity())) {
                 openCamera(getWidth(), getHeight());
             } else {
-                showMessage();
+                onPermissionDenied();
             }
         } else {
             setSurfaceTextureListener(mSurfaceTextureListener);
@@ -807,22 +813,21 @@ public class Camera2RecorderView extends PermissionViewBase {
         if (manager != null) {
             manager = null;
         }
-        if (isVideo) {
-            manager = (CameraManager) reactApplicationContext.getSystemService(Context.CAMERA_SERVICE);
 
-            try {
-                if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
-                    throw new RuntimeException("Time out waiting to lock camera opening.");
+        manager = (CameraManager) reactApplicationContext.getSystemService(Context.CAMERA_SERVICE);
+        try {
+            CameraCharacteristics characteristics = null;
+            for (String cameraId : manager.getCameraIdList()) {
+                characteristics = manager.getCameraCharacteristics(cameraId);
+                if (characteristics.get(CameraCharacteristics.LENS_FACING) == mFacing) {
+                    mCameraId = cameraId;
+                    break;
                 }
-
-                CameraCharacteristics characteristics = null;
-                for (String cameraId : manager.getCameraIdList()) {
-                    characteristics = manager.getCameraCharacteristics(cameraId);
-                    if (characteristics.get(CameraCharacteristics.LENS_FACING) == mFacing) {
-                        mCameraId = cameraId;
-                        break;
-                    }
-                }
+            }
+            if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
+                throw new RuntimeException("Time out waiting to lock camera opening.");
+            }
+            if (isVideo) {
 
                 StreamConfigurationMap map = characteristics
                         .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -839,32 +844,19 @@ public class Camera2RecorderView extends PermissionViewBase {
                 configureTransform(width, height);
                 mMediaRecorder = new MediaRecorder();
                 if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    doOnCancel();
+                    onPermissionDenied();
                     return;
                 }
                 manager.openCamera(mCameraId, mStateCallback, null);
-
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-                onCameraAccessException();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        } else {
-            setUpCameraOutputs(width, height);
-            configureTransform(width, height);
-            Activity activity = getActivity();
-            manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
-            try {
-                if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
-                    throw new RuntimeException("Time out waiting to lock camera opening.");
-                }
+            } else {
+                setUpCameraOutputs(width, height);
+                configureTransform(width, height);
                 manager.openCamera(mCameraId, mStateCallback, mBackgroundHandler);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
             }
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
         }
     }
 
@@ -944,6 +936,7 @@ public class Camera2RecorderView extends PermissionViewBase {
     /**
      * Creates a new {@link CameraCaptureSession} for camera preview.
      */
+
     private void startPreview() {
         if (mCameraDevice == null || !isAvailable() || mPreviewSize == null) {
             return;
@@ -1001,6 +994,8 @@ public class Camera2RecorderView extends PermissionViewBase {
                                     mPreviewSession.setRepeatingRequest(mPreviewRequest,
                                             mCaptureCallback, mBackgroundHandler);
                                 } catch (CameraAccessException e) {
+                                    e.printStackTrace();
+                                } catch (SecurityException e) {
                                     e.printStackTrace();
                                 }
                             }
@@ -1286,7 +1281,7 @@ public class Camera2RecorderView extends PermissionViewBase {
                 if(isPermissionGranted(getActivity()) && getWidth() >= 0 && getHeight() >= 0) {
                     openCamera(getWidth(), getHeight());
                 } else {
-                    doOnCancel();
+                    onPermissionDenied();
                 }
                 break;
             case REQUEST_PERMISSIONS_OPEN2:
@@ -1295,13 +1290,10 @@ public class Camera2RecorderView extends PermissionViewBase {
                     tempWidth = -1;
                     tempHeight = -1;
                 } else {
-                    doOnCancel();
+                    onPermissionDenied();
                 }
                 break;
 
         }
     }
-
-
-
 }

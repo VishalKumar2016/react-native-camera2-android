@@ -1,12 +1,14 @@
 package com.reactlibrary;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -19,11 +21,13 @@ import com.facebook.react.modules.core.PermissionListener;
 import com.reactlibrary.permission.OnImagePickerPermissionsCallback;
 import com.reactlibrary.permission.PermissionUtils;
 
+import java.lang.annotation.Target;
+
 
 /**
  * Created by Vishal on 12/09/17.
  */
-
+@TargetApi(Build.VERSION_CODES.M)
 public abstract class PermissionViewBase extends Camera2Base {
 
     protected ReactApplicationContext reactApplicationContext;
@@ -57,6 +61,7 @@ public abstract class PermissionViewBase extends Camera2Base {
 
             if (!permissionsGranted) {
                 //  responseHelper.invokeError(callback, "Permissions weren't granted");
+                onPermissionDenied();
                 return false;
             }
             permissionResultActions(requestCode);
@@ -106,7 +111,7 @@ public abstract class PermissionViewBase extends Camera2Base {
                         .explainingDialog(this, new PermissionUtils.OnExplainingPermissionCallback() {
                             @Override
                             public void onCancel(DialogInterface dialogInterface) {
-                                doOnCancel();
+                                onPermissionDenied();
                             }
 
                             @Override
@@ -146,8 +151,8 @@ public abstract class PermissionViewBase extends Camera2Base {
         return true;
     }
 
-    protected void showMessage() {
-        Toast.makeText(getActivity(),"You have to grant permissions to use this app", Toast.LENGTH_LONG).show();
+    public void onPermissionDenied() {
+        super.onPermissionDenied("You have to grant permissions to use camera");
     }
 
     protected void goBack() {
@@ -160,7 +165,7 @@ public abstract class PermissionViewBase extends Camera2Base {
     }
 
     protected void doOnCancel() {
-        showMessage();
+        onPermissionDenied();
         goBack();
     }
 

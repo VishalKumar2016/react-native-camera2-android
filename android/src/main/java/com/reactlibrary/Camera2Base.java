@@ -84,6 +84,7 @@ abstract class Camera2Base extends AutoFitTextureView {
                 event
         );
     }
+
     public void onCameraAccessException() {
         WritableMap event = Arguments.createMap();
         ReactContext reactContext = (ReactContext) getContext();
@@ -100,6 +101,17 @@ abstract class Camera2Base extends AutoFitTextureView {
         reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
                 getId(),
                 "cameraFailed",
+                event
+        );
+    }
+
+    public void onPermissionDenied(String message) {
+        WritableMap event = Arguments.createMap();
+        event.putString("message", message);
+        ReactContext reactContext = (ReactContext) getContext();
+        reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
+                getId(),
+                "permissionDenied",
                 event
         );
     }

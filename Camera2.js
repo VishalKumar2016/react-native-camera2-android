@@ -60,6 +60,7 @@ Camera2.propTypes = {
   onRecordingFinished: PropTypes.func,
   onCameraAccessException: PropTypes.func,
   onCameraFailed: PropTypes.func,
+  onPermissionDenied: PropTypes.func,
   onImageCaptureFinish: PropTypes.func,
   type: PropTypes.oneOf(['front', 'back']),
   flash: PropTypes.oneOf(['on', 'off','auto']),
