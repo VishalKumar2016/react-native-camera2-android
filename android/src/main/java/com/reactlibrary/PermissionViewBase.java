@@ -16,6 +16,7 @@ import android.support.v7.app.AlertDialog;
 import android.widget.Toast;
 
 import com.facebook.react.ReactActivity;
+import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.modules.core.PermissionListener;
 import com.reactlibrary.permission.OnImagePickerPermissionsCallback;
@@ -28,13 +29,14 @@ import java.lang.annotation.Target;
  * Created by Vishal on 12/09/17.
  */
 @TargetApi(Build.VERSION_CODES.M)
-public abstract class PermissionViewBase extends Camera2Base {
+public abstract class PermissionViewBase extends Camera2Base implements ActivityEventListener {
 
     protected ReactApplicationContext reactApplicationContext;
 
     public PermissionViewBase(Context context, ReactApplicationContext reactApplicationContext) {
         super(context);
         this.reactApplicationContext = reactApplicationContext;
+        this.reactApplicationContext.addActivityEventListener(this);
     }
 
     public static final int REQUEST_PERMISSIONS_IMAGE = 14000;
@@ -151,6 +153,18 @@ public abstract class PermissionViewBase extends Camera2Base {
         return true;
     }
 
+    @Override
+    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+        if(!isPermissionGranted(getActivity())){
+            onPermissionDenied();
+        }
+    }
+
+    @Override
+    public void onNewIntent(Intent intent) {
+
+    }
+
     public void onPermissionDenied() {
         super.onPermissionDenied("You have to grant permissions to use camera");
     }
@@ -170,5 +184,4 @@ public abstract class PermissionViewBase extends Camera2Base {
     }
 
     abstract void permissionResultActions(int requestCode);
-
 }
