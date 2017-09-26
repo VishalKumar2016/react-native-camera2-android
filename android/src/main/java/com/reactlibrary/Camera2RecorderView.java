@@ -51,6 +51,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -240,7 +242,15 @@ public class Camera2RecorderView extends PermissionViewBase {
     }
 
     public boolean isAutoOrOnFlash() {
-        return flashStatus.equals(FLASH_ON) || isAutoFlashRequired();
+        return isFlashOn() || isAutoFlashRequired();
+    }
+
+    public boolean isFlashOn() {
+        return flashStatus.equals(FLASH_ON);
+    }
+
+    public boolean isBackFacing() {
+        return mFacing == CameraCharacteristics.LENS_FACING_BACK;
     }
 
     @Override
@@ -500,11 +510,6 @@ public class Camera2RecorderView extends PermissionViewBase {
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
 
     /**
-     * Whether the current camera device supports Flash or not.
-     */
-    private boolean mFlashSupported;
-
-    /**
      * Orientation of the camera sensor
      */
     private int mSensorOrientation;
@@ -535,7 +540,8 @@ public class Camera2RecorderView extends PermissionViewBase {
                         // CONTROL_AE_STATE can be null on some devices
                         Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
                         if (aeState == null ||
-                                aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
+                                aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED
+                                || (isFlashOn() && isBackFacing()) ) {
                             mState = STATE_PICTURE_TAKEN;
                             captureStillPicture();
                         } else {
@@ -700,11 +706,10 @@ public class Camera2RecorderView extends PermissionViewBase {
                         = manager.getCameraCharacteristics(cameraId);
 
                 // We don't use a front facing camera in this sample.
-                Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    continue;
-                }
-
+//                Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+//                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+//                    continue;
+//                }
                 StreamConfigurationMap map = characteristics.get(
                         CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                 if (map == null) {
@@ -781,13 +786,10 @@ public class Camera2RecorderView extends PermissionViewBase {
                     setAspectRatio(
                             mPreviewSize.getHeight(), mPreviewSize.getWidth());
                 }
-
-                // Check if the flash is supported.
-                Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-                mFlashSupported = available == null ? false : available;
-
-                mCameraId = cameraId;
-                return;
+                if (characteristics.get(CameraCharacteristics.LENS_FACING) == mFacing) {
+                    mCameraId = cameraId;
+                    return;
+                }
             }
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -816,19 +818,18 @@ public class Camera2RecorderView extends PermissionViewBase {
 
         manager = (CameraManager) reactApplicationContext.getSystemService(Context.CAMERA_SERVICE);
         try {
-            CameraCharacteristics characteristics = null;
-            for (String cameraId : manager.getCameraIdList()) {
-                characteristics = manager.getCameraCharacteristics(cameraId);
-                if (characteristics.get(CameraCharacteristics.LENS_FACING) == mFacing) {
-                    mCameraId = cameraId;
-                    break;
-                }
-            }
             if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
             }
             if (isVideo) {
-
+                CameraCharacteristics characteristics = null;
+                for (String cameraId : manager.getCameraIdList()) {
+                    characteristics = manager.getCameraCharacteristics(cameraId);
+                    if (characteristics.get(CameraCharacteristics.LENS_FACING) == mFacing) {
+                        mCameraId = cameraId;
+                        break;
+                    }
+                }
                 StreamConfigurationMap map = characteristics
                         .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                 mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
@@ -1080,9 +1081,13 @@ public class Camera2RecorderView extends PermissionViewBase {
             mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_START);
             // Tell #mCaptureCallback to wait for the lock.
-            mState = STATE_WAITING_LOCK;
-            mPreviewSession.capture(mPreviewBuilder.build(), mCaptureCallback,
-                    mBackgroundHandler);
+            if(isBackFacing()) {
+                mState = STATE_WAITING_LOCK;
+                mPreviewSession.capture(mPreviewBuilder.build(), mCaptureCallback,
+                        mBackgroundHandler);
+            } else {
+                captureStillPicture();
+            }
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -1173,7 +1178,6 @@ public class Camera2RecorderView extends PermissionViewBase {
             // Reset the auto-focus trigger
             mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-            setCameraFlash(mPreviewBuilder);
             mPreviewSession.capture(mPreviewBuilder.build(), mCaptureCallback,
                     mBackgroundHandler);
             // After this, the camera will go back to the normal state of preview.
