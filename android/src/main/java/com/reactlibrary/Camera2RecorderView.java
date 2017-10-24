@@ -716,10 +716,11 @@ public class Camera2RecorderView extends PermissionViewBase {
                     continue;
                 }
 
+//                Size largest = Collections.max(
+//                        Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
+//                        new CompareSizesByArea());
                 // For still image captures, we use the largest available size.
-                Size largest = Collections.max(
-                        Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
-                        new CompareSizesByArea());
+                 Size largest = getFullScreenPreview(map.getOutputSizes(ImageFormat.JPEG),width,height);
                 mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
                         ImageFormat.JPEG, /*maxImages*/2);
                 mImageReader.setOnImageAvailableListener(
@@ -773,9 +774,13 @@ public class Camera2RecorderView extends PermissionViewBase {
                 // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
                 // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
                 // garbage capture data.
-                mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
-                        rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
-                        maxPreviewHeight, largest);
+//                mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+//                        rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
+//                        maxPreviewHeight, largest);
+
+                // For still image captures, we use the largest available size.
+                mPreviewSize = getFullScreenPreview(map.getOutputSizes(SurfaceTexture.class),
+                        width, height);
 
                 // We fit the aspect ratio of TextureView to the size of preview we picked.
                 int orientation = getResources().getConfiguration().orientation;
@@ -798,6 +803,46 @@ public class Camera2RecorderView extends PermissionViewBase {
             // device this code runs.
             showToast("Device not support camera2");
         }
+    }
+
+    private Size getFullScreenPreview(Size[] outputSizes, int width, int height) {
+        List<Size> outputSizeList = Arrays.asList(outputSizes);
+        // outputSizeList = sortListInDescendingOrder(outputSizeList); //Some phones available list is in ascending order
+        Size fullScreenSize = outputSizeList.get(0);
+        for (int i = 0; i < outputSizeList.size(); i++) {
+            int orginalWidth = outputSizeList.get(i).getWidth();
+            int orginalHeight = outputSizeList.get(i).getHeight();
+            float orginalRatio = (float) orginalWidth / (float) orginalHeight;
+            float requiredRatio;
+            if (width > height) {
+                requiredRatio = ((float) width / height); //for landscape mode
+                if ((outputSizeList.get(i).getWidth() > width && outputSizeList.get(i).getHeight() > height)) {
+                    //if we select preview size hire than device display resolution it may fail to create capture request
+                    continue;
+                }
+            } else {
+                requiredRatio = 1 / ((float) width / height); //for portrait mode
+                if ((outputSizeList.get(i).getWidth() > height && outputSizeList.get(i).getHeight() > width)) {
+                    //if we select preview size hire than device display resolution it may fail to create capture request
+                    continue;
+                }
+            }
+            if ((orginalRatio >= (requiredRatio - 0.10) && orginalRatio < (requiredRatio + 0.10)) ||
+                    (orginalRatio >= (requiredRatio + 0.10) && orginalRatio < (requiredRatio - 0.10))) {
+                fullScreenSize = outputSizeList.get(i);
+                break;
+            }
+        }
+        return fullScreenSize;
+    }
+
+    private List<Size> sortListInDescendingOrder(List<Size> sizes) {
+        Collections.sort(sizes, new Comparator<Size>() {
+            public int compare(final Size a, final Size b) {
+                return a.getWidth() * a.getHeight() - b.getWidth() * b.getHeight();
+            }
+        });
+        return sizes;
     }
 
     /**
@@ -842,6 +887,7 @@ public class Camera2RecorderView extends PermissionViewBase {
                 } else {
                     this.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
                 }
+                setUpCameraOutputs(width, height);
                 configureTransform(width, height);
                 mMediaRecorder = new MediaRecorder();
                 if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
