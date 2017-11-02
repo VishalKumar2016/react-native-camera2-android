@@ -806,9 +806,18 @@ public class Camera2RecorderView extends PermissionViewBase {
     }
 
     private Size getFullScreenPreview(Size[] outputSizes, int width, int height) {
+        float difference = 0f;
+        Size fullScreenSize = null;
+        while (fullScreenSize == null) {
+            fullScreenSize = getFullScreenPreviewValue(outputSizes, width, height, null, difference);
+            difference = difference+0.10f;
+        }
+        return fullScreenSize;
+    }
+
+    private Size getFullScreenPreviewValue(Size[] outputSizes, int width, int height, Size fullScreenSize, float difference) {
         List<Size> outputSizeList = Arrays.asList(outputSizes);
         // outputSizeList = sortListInDescendingOrder(outputSizeList); //Some phones available list is in ascending order
-        Size fullScreenSize = outputSizeList.get(0);
         for (int i = 0; i < outputSizeList.size(); i++) {
             int orginalWidth = outputSizeList.get(i).getWidth();
             int orginalHeight = outputSizeList.get(i).getHeight();
@@ -827,8 +836,7 @@ public class Camera2RecorderView extends PermissionViewBase {
                     continue;
                 }
             }
-            if ((orginalRatio >= (requiredRatio - 0.10) && orginalRatio < (requiredRatio + 0.10)) ||
-                    (orginalRatio >= (requiredRatio + 0.10) && orginalRatio < (requiredRatio - 0.10))) {
+            if ((orginalRatio >= (requiredRatio - difference) && orginalRatio < (requiredRatio + difference))) {
                 fullScreenSize = outputSizeList.get(i);
                 break;
             }
