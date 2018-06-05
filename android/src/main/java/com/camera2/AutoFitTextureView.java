@@ -1,4 +1,4 @@
-package com.reactlibrary;
+package com.camera2;
 
 /*
  * Copyright 2014 The Android Open Source Project

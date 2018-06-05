@@ -1,4 +1,4 @@
-package com.reactlibrary.permission;
+package com.camera2.permission;
 
 import android.support.annotation.NonNull;
 

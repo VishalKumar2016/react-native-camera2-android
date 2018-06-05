@@ -1,4 +1,4 @@
-package com.reactlibrary;
+package com.camera2;
 
 import android.Manifest;
 import android.annotation.TargetApi;
@@ -19,8 +19,8 @@ import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.modules.core.PermissionListener;
-import com.reactlibrary.permission.OnImagePickerPermissionsCallback;
-import com.reactlibrary.permission.PermissionUtils;
+import com.camera2.permission.OnImagePickerPermissionsCallback;
+import com.camera2.permission.PermissionUtils;
 
 import java.lang.annotation.Target;
 

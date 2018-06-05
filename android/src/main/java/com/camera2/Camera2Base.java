@@ -1,4 +1,4 @@
-package com.reactlibrary;
+package com.camera2;
 
 
 import android.content.Context;

@@ -1,4 +1,4 @@
-package com.reactlibrary.permission;
+package com.camera2.permission;
 
 import android.app.Activity;
 import android.content.DialogInterface;
@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 
-import com.reactlibrary.PermissionViewBase;
+import com.camera2.PermissionViewBase;
 
 /**
  * Created by rusfearuth on 03.03.17.
